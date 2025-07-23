@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12班回忆查看器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#69b1ff',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #165DFF 0%, #69b1ff 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <!-- 登录页面 -->
+    <div id="loginPage" class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-card overflow-hidden transform transition-all duration-500 hover:shadow-hover">
+            <div class="bg-gradient-primary p-6 text-white text-center">
+                <h2 class="text-2xl font-bold mb-2 text-shadow">12班回忆查看器</h2>
+                <p class="opacity-90">请登录</p>
+            </div>
+            <div class="p-6">
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-user"></i>
+                            </span>
+                            <input type="text" id="username" name="username" placeholder="请输入用户名" 
+                                class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all-300"
+                                required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-lock"></i>
+                            </span>
+                            <input type="password" id="password" name="password" placeholder="请输入密码" 
+                                class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all-300"
+                                required>
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                                <i class="fa fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                        </div>
+                        <a href="#" class="text-sm text-primary hover:text-primary/80 transition-all-300">忘记密码?</a>
+                    </div>
+                    <button type="submit" 
+                        class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-all-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2">
+                        登录
+                    </button>
+                </form>
+                <div id="loginError" class="mt-4 hidden">
+                    <div class="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                        <div class="flex">
+                            <i class="fa fa-exclamation-circle mr-2 mt-0.5"></i>
+                            <p id="errorMessage">用户名或密码错误</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 媒体查看页面 (初始隐藏) -->
+    <div id="mediaPage" class="w-full max-w-6xl hidden">
+        <div class="bg-white rounded-2xl shadow-card overflow-hidden transform transition-all duration-500 hover:shadow-hover">
+            <div class="bg-gradient-primary p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-1 text-shadow">欢迎回来同学。照片和视频会定期更新</h2>
+                        <p class="opacity-90">这是回忆</p>
+                    </div>
+                    <button id="logoutBtn" class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-all-300 flex items-center">
+                        <i class="fa fa-sign-out mr-2"></i> 退出
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">照片</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+                    <!-- 照片 1 -->
+                    <div class="group relative overflow-hidden rounded-xl shadow-md transition-all-300 hover:shadow-lg">
+                        <img src="411f4f62893f495a086b2df1d3c6993.jpg" alt="研学照片" 
+                            class="w-full h-48 object-cover transition-all duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
+                            <div class="p-3 w-full">
+                                <h4 class="text-white font-medium">照片 1</h4>
+                                <p class="text-white/80 text-sm">美丽风光</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 照片 2 -->
+                    <div class="group relative overflow-hidden rounded-xl shadow-md transition-all-300 hover:shadow-lg">
+                        <img src="92694631a77896c9b75d00e06412f3c.jpg" alt="研学照片" 
+                            class="w-full h-48 object-cover transition-all duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
+                            <div class="p-3 w-full">
+                                <h4 class="text-white font-medium">研学风光</h4>
+                                <p class="text-white/80 text-sm">现代研学景观</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 照片 3 -->
+                    <div class="group relative overflow-hidden rounded-xl shadow-md transition-all-300 hover:shadow-lg">
+                        <img src="a2aa98a127d981cc4e51328541b451a.jpg" alt="研学照片" 
+                            class="w-full h-48 object-cover transition-all duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
+                            <div class="p-3 w-full">
+                                <h4 class="text-white font-medium">回忆</h4>
+                                <p class="text-white/80 text-sm">网站制作人：F</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 照片 4 -->
+                    <div class="group relative overflow-hidden rounded-xl shadow-md transition-all-300 hover:shadow-lg">
+                        <img src="b0ab26caa546e7379beeadd9ed49679.jpg" alt="人物照片" 
+                            class="w-full h-48 object-cover transition-all duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
+                            <div class="p-3 w-full">
+                                <h4 class="text-white font-medium">人物肖像</h4>
+                                <p class="text-white/80 text-sm">生动的人物表情</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 照片 5 -->
+                    <div class="group relative overflow-hidden rounded-xl shadow-md transition-all-300 hover:shadow-lg">
+                        <img src="dea6b56391e7706d411ab2cb3b3b726.jpg" alt="照片" 
+                            class="w-full h-48 object-cover transition-all duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
+                            <div class="p-3 w-full">
+                                <h4 class="text-white font-medium">研学回忆</h4>
+                                <p class="text-white/80 text-sm">网页正在建设中</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">视频</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 视频 1 -->
+                    <div class="bg-gray-100 rounded-xl overflow-hidden shadow-md transition-all-300 hover:shadow-lg">
+                        <div class="aspect-video bg-gray-200 relative">
+                            <video id="video1" class="w-full h-full object-cover" poster="https://picsum.photos/seed/video1/800/450">
+                                <source src="视频1.mp4" type="video/mp4">
+                              。
+                            </video>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <button class="play-btn bg-primary/80 hover:bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center transition-all-300 transform hover:scale-110">
+                                    <i class="fa fa-play text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-medium text-gray-800">回忆视频</h4>
+                            <p class="text-gray-600 text-sm">一段回忆景视频</p>
+                        </div>
+                    </div>
+                    <!-- 视频 2 -->
+                    <div class="bg-gray-100 rounded-xl overflow-hidden shadow-md transition-all-300 hover:shadow-lg">
+                        <div class="aspect-video bg-gray-200 relative">
+                            <video id="video2" class="w-full h-full object-cover" poster="https://picsum.photos/seed/video2/800/450">
+                                <source src="抖音2025723-764479.mp4" type="video/mp4">
+                                您的浏览器不支持HTML5视频播放。
+                            </video>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <button class="play-btn bg-primary/80 hover:bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center transition-all-300 transform hover:scale-110">
+                                    <i class="fa fa-play text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-medium text-gray-800">城市生活</h4>
+                            <p class="text-gray-600 text-sm">城市日常活动的精彩瞬间</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登录逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginPage = document.getElementById('loginPage');
+            const mediaPage = document.getElementById('mediaPage');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const loginError = document.getElementById('loginError');
+            const errorMessage = document.getElementById('errorMessage');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            
+            // 切换密码可见性
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // 登录表单提交
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                // 验证用户名和密码
+                if (username === 'admin' && password === '5897978') {
+                    // 登录成功，隐藏登录页面，显示媒体页面
+                    loginPage.classList.add('hidden');
+                    mediaPage.classList.remove('hidden');
+                    
+                    // 添加进入动画
+                    setTimeout(() => {
+                        mediaPage.classList.add('animate-fadeIn');
+                    }, 10);
+                    
+                    // 重置错误消息
+                    loginError.classList.add('hidden');
+                    
+                    // 存储登录状态
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                } else {
+                    // 登录失败，显示错误消息
+                    errorMessage.textContent = username !== 'admin' ? '用户名错误' : '密码错误';
+                    loginError.classList.remove('hidden');
+                    
+                    // 添加错误抖动动画
+                    loginForm.classList.add('animate-shake');
+                    setTimeout(() => {
+                        loginForm.classList.remove('animate-shake');
+                    }, 500);
+                }
+            });
+            
+            // 退出登录
+            logoutBtn.addEventListener('click', function() {
+                // 隐藏媒体页面，显示登录页面
+                mediaPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+                
+                // 重置表单
+                loginForm.reset();
+                
+                // 移除登录状态
+                sessionStorage.removeItem('isLoggedIn');
+            });
+            
+            // 视频播放控制
+            const playButtons = document.querySelectorAll('.play-btn');
+            playButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const video = this.closest('.aspect-video').querySelector('video');
+                    
+                    if (video.paused) {
+                        video.play();
+                        this.querySelector('i').classList.remove('fa-play');
+                        this.querySelector('i').classList.add('fa-pause');
+                        this.classList.add('opacity-50');
+                    } else {
+                        video.pause();
+                        this.querySelector('i').classList.remove('fa-pause');
+                        this.querySelector('i').classList.add('fa-play');
+                        this.classList.remove('opacity-50');
+                    }
+                });
+            });
+            
+            // 视频结束后重置播放按钮
+            document.querySelectorAll('video').forEach(video => {
+                video.addEventListener('ended', function() {
+                    const playBtn = this.closest('.aspect-video').querySelector('.play-btn');
+                    playBtn.querySelector('i').classList.remove('fa-pause');
+                    playBtn.querySelector('i').classList.add('fa-play');
+                    playBtn.classList.remove('opacity-50');
+                });
+            });
+            
+            // 检查是否已登录
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                loginPage.classList.add('hidden');
+                mediaPage.classList.remove('hidden');
+            }
+        });
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+            
+            .animate-fadeIn {
+                animation: fadeIn 0.5s ease-out forwards;
+            }
+            
+            .animate-shake {
+                animation: shake 0.5s ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+    
